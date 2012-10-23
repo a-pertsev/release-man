@@ -1,0 +1,96 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>Test</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <script src="static/js/jquery.js"></script>
+    <script src="static/js/jquery-tmpl.js"></script>
+    <link href="static/css/main.css" rel="stylesheet" type="text/css">
+  </head>
+
+  <body style="padding: 100px 10px 0 40px">
+      <input id="release_number" type="text"/>
+      <input id="release_submit" type="submit" value="Get release info"/>
+      
+      <div class="loader">&nbsp;</div>
+      <div class="load_error">Error</div>
+      
+      <div class="table_container" style="display:none;">
+          <table>
+              <thead>
+                  <tr>
+                      <th class="head-field">Ветка</th>
+                      <th class="head-field">Пакеты</th>
+                      <th>hh.ru</th>
+                      <th>xhh</th>
+                      <th>common</th>
+                  </tr>
+              </thead>
+              <tbody id="issues_container">
+                  
+              </tbody>
+          </table>
+      </div>
+      
+      <script id="issue_template" type="text/x-jquery-tmpl">
+        <tr>
+            <td style="width:100px; border: 1px;">
+                <a href="http://jira.hh.ru/browse/${name}">${name}</a>
+            </td> 
+
+            <td>
+                {{if data.packages }}
+                    ${data.packages}
+                {{/if}}
+            </td> 
+            <td class="table-checkbox">
+                <input type="checkbox"/>
+            </td>
+            <td class="table-checkbox">
+                <input type="checkbox"/>
+            </td>
+            <td class="table-checkbox">
+                <input type="checkbox"/>
+            </td>
+        </tr>
+      </script>
+      
+      <script>
+          $(document).ready(function(){
+          
+              var release_number = $('#release_number'),
+                  issues_container = $('#issues_container'),
+                  loader = $('.loader'),
+                  error = $('.load_error'),
+                  table = $('.table_container');
+             
+              var onSuccessAjax = function(transport) {
+                  issues_container.empty();
+                  loader.hide();
+                  table.show();
+              
+                  $.each(transport, function(issue, data){
+                      $("#issue_template").tmpl({name: issue, data: data}).appendTo(issues_container);
+                  });
+              };
+              
+              var errorAjax = function(transport){
+                  loader.hide();
+                  error.show();                  
+              };
+              
+              $('#release_submit').click(function(){
+                  loader.show();
+                  error.hide();
+                  table.hide();
+                  $.ajax({
+                      url: '/ajax/get_release_info',
+                      data: {'release': release_number.val()},
+                      success: onSuccessAjax,
+                      error: errorAjax
+                  });
+              });
+              
+          });
+      </script>
+  </body>
+</html>

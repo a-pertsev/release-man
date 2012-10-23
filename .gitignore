@@ -1,0 +1,9 @@
+*.pyc
+*.pick
+
+.project
+.pydevproject
+.settings
+
+tornado
+
