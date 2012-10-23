@@ -73,24 +73,19 @@ class ReleaseInfoHandler(ReleaseHandler):
                 group_cb()
     
             async_group = AsyncGroup(group_cb)
-    
+            async_group.add_notification() #for local usage
+            
             for issue in issue_numbers:
                 url = JIRA_API_ISSUE.format(issue)
                 self.make_request(url=url, headers=get_jira_auth_header(), cb=async_group.add(partial(issue_cb, issue)))        
 
             self.git_check_branches(release_branches=issue_numbers, async_group=async_group, context=result_data)
-
+            async_group.dec() # for loacal usage
 
         release = self.get_argument('release')
         url = JIRA_API_ISSUE.format(release)
-        self.make_request(url, '', get_jira_auth_header(), release_cb)
+        self.make_request(url=url, headers=get_jira_auth_header(), cb=release_cb)
          
-#        with open('jira_issue.pick', 'r') as f:
-#            release_plain_data = json.loads(pickle.load(f))
-#            
-#        release_includes = release_plain_data.get('fields').get('issuelinks', [])
-#        issue_numbers = map(lambda issue: issue.get('outwardIssue').get('key'), release_includes)
-
 
 
 if __name__ == '__main__':
