@@ -41,14 +41,19 @@ def get_github_auth_header():
 
 class ReleaseInfoHandler(ReleaseHandler):
     def git_check_branches(self, release_branches, async_group, context):
-        def branches_cb(context, response):
+        def branches_cb(context, repo, response):
             git_data = json.loads(response.body)
             repo_branches = map(lambda tree: tree.get('name', ''), git_data)
-#            if filter(lambda repo_branch: issuerepo_branches)
+            for repo_branch in repo_branches:
+                for release_branch in release_branches:
+                    if release_branch in repo_branch:
+                        if not context[release_branch].has_key('git_branches'):
+                            context[release_branch]['git_branches'] = defaultdict(list)
+                        context[release_branch]['git_branches'][repo].append(repo_branch)
             
         for repo in REPOS:            
             url = GITHUB_API_BRANCH_CHECK.format(repo)
-            self.make_request(url=url, headers=get_github_auth_header(), cb=async_group.add(partial(branches_cb, context)))
+            self.make_request(url=url, headers=get_github_auth_header(), cb=async_group.add(partial(branches_cb, context, repo)))
     
 
     @web.asynchronous
