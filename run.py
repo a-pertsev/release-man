@@ -2,7 +2,6 @@
 
 import logging
 import json
-import base64
 
 from collections import defaultdict
 from functools import partial
@@ -16,26 +15,17 @@ JIRA_API_HOST = 'jira.hh.ru/rest/api/2/'
 JIRA_API_ISSUE = JIRA_API_HOST + 'issue/{0}?fields=summary,customfield_11010,issuelinks'
 
 GITHUB_API_HOST = 'https://api.github.com/'
-GITHUB_API_BRANCH_CHECK = GITHUB_API_HOST + 'repos/hhru/{0}/branches'
+GITHUB_API_BRANCHES_LIST = GITHUB_API_HOST + 'repos/hhru/{0}/branches'
+GITHUB_API_BRANCH = GITHUB_API_HOST + '/repos/hh.ru/{0}/branches/{1}'
+
 
 REPOS = {'hh.sites.main'    : 'xhh',
          'hh.ru'            : 'hh.ru',
          'hh.sites.common'  : 'hh-common',}
 
 
+
 logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
-
-
-def get_auth_header(user, password):
-    b64 = base64.b64encode('{0}:{1}'.format(user, password))
-    return {'Authorization': 'Basic {0}'.format(b64)}    
-
-def get_jira_auth_header():
-    return get_auth_header('jira_login', 'jira_password')
-
-
-def get_github_auth_header():
-    return get_auth_header('jira_login', 'github_password')
 
 
 
@@ -49,11 +39,11 @@ class ReleaseInfoHandler(ReleaseHandler):
                     if release_branch in repo_branch:
                         if not context[release_branch].has_key('git_branches'):
                             context[release_branch]['git_branches'] = defaultdict(list)
-                        context[release_branch]['git_branches'][repo].append(repo_branch)
+                        context[release_branch]['git_branches'][REPOS.get(repo)].append(repo_branch)
             
         for repo in REPOS:            
-            url = GITHUB_API_BRANCH_CHECK.format(repo)
-            self.make_request(url=url, headers=get_github_auth_header(), cb=async_group.add(partial(branches_cb, context, repo)))
+            url = GITHUB_API_BRANCHES_LIST.format(repo)
+            self.make_github_request(url=url, cb=async_group.add(partial(branches_cb, context, repo)))
     
 
     @web.asynchronous
@@ -82,15 +72,16 @@ class ReleaseInfoHandler(ReleaseHandler):
             
             for issue in issue_numbers:
                 url = JIRA_API_ISSUE.format(issue)
-                self.make_request(url=url, headers=get_jira_auth_header(), cb=async_group.add(partial(issue_cb, issue)))        
+                self.make_jira_request(url=url, cb=async_group.add(partial(issue_cb, issue)))        
 
             self.git_check_branches(release_branches=issue_numbers, async_group=async_group, context=result_data)
             async_group.dec() # for loacal usage
 
         release = self.get_argument('release')
         url = JIRA_API_ISSUE.format(release)
-        self.make_request(url=url, headers=get_jira_auth_header(), cb=release_cb)
-         
+        self.make_jira_request(url=url, cb=release_cb)
+
+        
 
 
 if __name__ == '__main__':

@@ -33,7 +33,7 @@
       
       <script id="issue_template" type="text/x-jquery-tmpl">
         <tr>
-            <td style="width:100px; border: 1px;">
+            <td style="width:100px;">
                 <a href="http://jira.hh.ru/browse/${name}">${name}</a>
             </td> 
 
@@ -43,13 +43,13 @@
                 {{/if}}
             </td> 
             <td class="table-checkbox">
-                <input type="checkbox"/>
+                <input type="checkbox" {{if data['git_branches']['hh.ru'] }} checked="checked" {{/if}}></input>
             </td>
             <td class="table-checkbox">
-                <input type="checkbox"/>
+                <input type="checkbox" {{if data['git_branches']['xhh'] }} checked="checked" {{/if}}></input>
             </td>
             <td class="table-checkbox">
-                <input type="checkbox"/>
+                <input type="checkbox" {{if data['git_branches']['hh-common'] }} checked="checked" {{/if}}></input>
             </td>
         </tr>
       </script>

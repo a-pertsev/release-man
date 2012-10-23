@@ -2,22 +2,24 @@
      margin-top: 20px;
 }
 
-.table_container .head-field{
-    min-width: 100px;
-}
+    .table_container .head-field{
+        min-width: 100px;
+    }
+    
+    
+    .table_container .head-field:last-child{
+        padding-right: 50px;
+    }
+    
+    .table_container th{
+        text-align: left;
+    }
 
-
-.table_container .head-field:last-child{
-    padding-right: 50px;
-}
-
-.table_container th{
-    text-align: left;
-}
 
 .table-checkbox {
     text-align: center;
 }
+
 
 .loader, 
 .load_error {
@@ -25,13 +27,13 @@
     display: none;    
 }
 
-.loader{
-    margin: 30px 0 0 60px;
-    background: url('../img/spinner_66x66.gif') top left no-repeat;
-}
-
-.load_error{
-    margin: 20px 0 0 50px;
-    font-size: 18px;
-    color: red;
-}
+    .loader{
+        margin: 30px 0 0 60px;
+        background: url('../img/spinner_66x66.gif') top left no-repeat;
+    }
+    
+    .load_error{
+        margin: 20px 0 0 50px;
+        font-size: 18px;
+        color: red;
+    }

@@ -6,18 +6,24 @@ import base64
 from tornado import web, httpclient, curl_httpclient
 
 
-
 http_client = curl_httpclient.CurlAsyncHTTPClient(max_clients = 200, max_simultaneous_connections = 200)
 LOCAL_DIR = 'local_info/'
 LOCAL_WORK = True
+
+
+def get_auth_header(user, password):
+    b64 = base64.b64encode('{0}:{1}'.format(user, password))
+    return {'Authorization': 'Basic {0}'.format(b64)}    
+
 
 class ResponseStub(object):
     def __init__(self, body):
         self.body = body
 
+
 class ReleaseHandler(web.RequestHandler):
+
     def make_request(self, url, data='', headers={}, cb=lambda x: None):
-        
         file_name = base64.b64encode(url)
         
         if LOCAL_WORK:
@@ -39,3 +45,11 @@ class ReleaseHandler(web.RequestHandler):
                     connect_timeout=5,
                     request_timeout=10)
         http_client.fetch(req, new_cb)
+        
+        
+    def make_jira_request(self, *args, **kwargs):
+        return self.make_request(*args, headers=get_auth_header('jira_login', 'jira_password'), **kwargs)
+
+    def make_github_request(self, *args, **kwargs):
+        return self.make_request(*args, headers=get_auth_header('jira_login', 'github_password'), **kwargs)
+    
