@@ -16,6 +16,7 @@ JIRA_API_ISSUE = JIRA_API_HOST + 'issue/{0}?fields=summary,customfield_11010,iss
 GITHUB_API_HOST = 'https://api.github.com/'
 GITHUB_API_BRANCHES_LIST = GITHUB_API_HOST + 'repos/hhru/{0}/branches'
 GITHUB_API_BRANCH = GITHUB_API_HOST + '/repos/hh.ru/{0}/branches/{1}'
+GITHUB_API_HHRU_BRANCH_DIFF = GITHUB_API_HOST + 'repos/hhru/hh.ru/compare/master...{0}'
 
 
 REPOS = {'hh.sites.main'    : 'xhh',
@@ -26,6 +27,16 @@ REPOS = {'hh.sites.main'    : 'xhh',
 
 
 class ReleaseInfoHandler(ReleaseHandler):
+    def get_sql_from_branch(self, branch, async_group, context):
+        def diff_cb(response):
+            git_data = json.loads(response.body)
+            for file_json in git_data.get('files', {}):
+                raw_url = file_json.get('raw_url', '')
+                if '.sql' in raw_url:
+                    context['sqls']['hh.ru'].append(raw_url)
+            
+        self.make_github_request(url=GITHUB_API_HHRU_BRANCH_DIFF.format(branch), cb=async_group.add(diff_cb))
+    
     def git_check_branches(self, release_branches, async_group, context):
         def branches_cb(context, repo, response):
             git_data = json.loads(response.body)
@@ -33,9 +44,12 @@ class ReleaseInfoHandler(ReleaseHandler):
             for repo_branch in repo_branches:
                 for release_branch in release_branches:
                     if release_branch in repo_branch:
-                        if not context[release_branch].has_key('git_branches'):
-                            context[release_branch]['git_branches'] = defaultdict(list)
-                        context[release_branch]['git_branches'][REPOS.get(repo)].append(repo_branch)
+                        if not context['issues'][release_branch].has_key('git_branches'):
+                            context['issues'][release_branch]['git_branches'] = defaultdict(list)
+                        context['issues'][release_branch]['git_branches'][REPOS.get(repo)].append(repo_branch)
+                        
+                        self.get_sql_from_branch(repo_branch, async_group, context)
+                        
             
         for repo in REPOS:            
             url = GITHUB_API_BRANCHES_LIST.format(repo)
@@ -49,7 +63,7 @@ class ReleaseInfoHandler(ReleaseHandler):
             release_includes = release_data.get('fields').get('issuelinks', [])
             issue_numbers = map(lambda issue: issue.get('outwardIssue').get('key'), release_includes)
 
-            result_data = defaultdict(dict)
+            result_data = {'issues' : defaultdict(dict), 'sqls': {'hh.ru': []}}
             
             def group_cb():
                 self.set_header('Content-Type', 'application/json')
@@ -57,7 +71,7 @@ class ReleaseInfoHandler(ReleaseHandler):
             
             def issue_cb(issue, response):
                 issue_data = json.loads(response.body)
-                result_data[issue].update({'summary': issue_data.get('fields').get('summary'), 
+                result_data['issues'][issue].update({'summary': issue_data.get('fields').get('summary'), 
                                            'packages': issue_data.get('fields').get('customfield_11010')})
             
             if not issue_numbers:

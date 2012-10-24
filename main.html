@@ -29,7 +29,14 @@
                   
               </tbody>
           </table>
+          <div class="sqls_container">
+              
+          </div>
       </div>
+      
+      <script id="sql_template" type="text/x-jquery-tmpl">
+          <b>${sql}</b></br>    
+      </script>
       
       <script id="issue_template" type="text/x-jquery-tmpl">
         <tr>
@@ -59,16 +66,22 @@
           
               var release_number = $('#release_number'),
                   issues_container = $('#issues_container'),
+                  sqls_container = $('.sqls_container'),
                   loader = $('.loader'),
                   error = $('.load_error'),
                   table = $('.table_container');
              
               var onSuccessAjax = function(transport) {
+                  sqls_container.empty();
                   issues_container.empty();
                   loader.hide();
                   table.show();
               
-                  $.each(transport, function(issue, data){
+                  $.each(transport.sqls['hh.ru'], function(index, sql){
+                      $("#sql_template").tmpl({sql: sql}).appendTo(sqls_container);
+                  });
+                  
+                  $.each(transport.issues, function(issue, data){
                       $("#issue_template").tmpl({name: issue, data: data}).appendTo(issues_container);
                   });
               };
