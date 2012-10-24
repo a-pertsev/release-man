@@ -22,7 +22,6 @@ class ResponseStub(object):
 
 
 class ReleaseHandler(web.RequestHandler):
-
     def make_request(self, url, data='', headers={}, cb=lambda x: None):
         file_name = base64.b64encode(url)
         
@@ -31,7 +30,7 @@ class ReleaseHandler(web.RequestHandler):
                 cb(ResponseStub(pickle.loads(f.read())))
             return
                 
-        def new_cb(response):
+        def dumped_cb(response):
             with open(LOCAL_DIR + file_name, 'w+') as f:
                 f.write(pickle.dumps(response.body))
             cb(response)
@@ -44,7 +43,7 @@ class ReleaseHandler(web.RequestHandler):
                     headers=headers,
                     connect_timeout=5,
                     request_timeout=10)
-        http_client.fetch(req, new_cb)
+        http_client.fetch(req, dumped_cb)
         
         
     def make_jira_request(self, *args, **kwargs):
