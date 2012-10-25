@@ -4,11 +4,14 @@ import pickle
 import base64
 
 from tornado import web, httpclient, curl_httpclient
+from urllib import urlencode
 
 
 http_client = curl_httpclient.CurlAsyncHTTPClient(max_clients = 200, max_simultaneous_connections = 200)
+
+LOCAL_DUMP = False
 LOCAL_DIR = 'local_info/'
-LOCAL_WORK = True
+LOCAL_WORK = False
 
 
 def get_auth_header(user, password):
@@ -22,6 +25,12 @@ class ResponseStub(object):
 
 
 class ReleaseHandler(web.RequestHandler):
+    def get_error_html(self, status_code, **kwargs):
+        result = {'error': status_code}
+        if kwargs.has_key('error_message'):
+            result.update(message=kwargs['error_message'])
+        return result
+
     def make_request(self, url, data='', headers={}, cb=lambda x: None):
         file_name = base64.b64encode(url)
         
@@ -31,14 +40,17 @@ class ReleaseHandler(web.RequestHandler):
             return
                 
         def dumped_cb(response):
-            with open(LOCAL_DIR + file_name, 'w+') as f:
-                f.write(pickle.dumps(response.body))
+            if LOCAL_DUMP:
+                with open(LOCAL_DIR + file_name, 'w+') as f:
+                    f.write(pickle.dumps(response.body))
             cb(response)
         
+        body = urlencode(data) if isinstance(data, dict) else data
+        if body:
+            url = url + '?' + body
         
         req = httpclient.HTTPRequest(
                     url=url,
-                    body=data,
                     method='GET',
                     headers=headers,
                     connect_timeout=5,
