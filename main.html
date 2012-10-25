@@ -76,14 +76,18 @@
                   issues_container.empty();
                   loader.hide();
                   table.show();
-              
-                  $.each(transport.sqls['hh.ru'], function(index, sql){
-                      $("#sql_template").tmpl({sql: sql}).appendTo(sqls_container);
-                  });
                   
-                  $.each(transport.issues, function(issue, data){
-                      $("#issue_template").tmpl({name: issue, data: data}).appendTo(issues_container);
-                  });
+                  if (transport.sqls) {
+                      $.each(transport.sqls['hh.ru'], function(index, sql){
+                          $("#sql_template").tmpl({sql: sql}).appendTo(sqls_container);
+                       });
+                  };                   
+                  
+                  if (transport.issues) {
+                      $.each(transport.issues, function(issue, data){
+                          $("#issue_template").tmpl({name: issue, data: data}).appendTo(issues_container);
+                      });
+                  };
               };
               
               var errorAjax = function(transport){

@@ -50,15 +50,16 @@ class ReleaseInfoHandler(ReleaseHandler):
             for repo_branch in repo_branches:
                 for release_branch in release_branches:
                     if release_branch in repo_branch:
-                        if not context['issues'][release_branch].has_key('git_branches'):
-                            context['issues'][release_branch]['git_branches'] = defaultdict(list)
                         context['issues'][release_branch]['git_branches'][REPOS.get(repo)].append(repo_branch)
                         
                         if repo == 'hh.ru':
                             self.get_sql_from_branch(repo_branch, async_group, context)
                         
-            
-        for repo in REPOS:            
+
+        for release_branch in release_branches:
+            context['issues'][release_branch]['git_branches'] = defaultdict(list)
+
+        for repo in REPOS:
             url = GITHUB_API_BRANCHES_LIST.format(repo)
             self.make_github_request(url=url, cb=async_group.add(partial(branches_cb, context, repo)))
     
