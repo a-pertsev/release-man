@@ -108,7 +108,7 @@ class ReleaseInfoHandler(ReleaseHandler):
                         suitable_issues.append(issue)
                 
                 if suitable_issues:
-                    self.finish({'variants': suitable_issues})
+                    self.finish({'release_variants': suitable_issues})
                 else:
                     self.send_error('404', error_message='Cannot find release issue')
                     

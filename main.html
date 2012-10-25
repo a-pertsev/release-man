@@ -11,6 +11,8 @@
       <input id="release_number" type="text"/>
       <input id="release_submit" class="g-button m-button_orange" type="submit" value="Get release info"/>
       
+      <div class="suggestions_container" style="display:none;">&nbsp;</div>
+      
       <div class="loader">&nbsp;</div>
       <div class="load_error">Error</div>
       
@@ -33,7 +35,14 @@
               
           </div>
       </div>
-      
+
+
+      <script id="release-suggestion" type="text/x-jquery-tmpl">
+          <span class="g-switcher m-switcher_009CD5" style="margin-right:20px;">
+              ${data.key} (${data.fields.summary})
+          </span>
+      </script>
+
       <script id="sql_template" type="text/x-jquery-tmpl">
           <b>${sql}</b></br>    
       </script>
@@ -67,16 +76,29 @@
               var release_number = $('#release_number'),
                   issues_container = $('#issues_container'),
                   sqls_container = $('.sqls_container'),
+                  suggestions_container = $('.suggestions_container'),
                   loader = $('.loader'),
                   error = $('.load_error'),
                   table = $('.table_container');
              
               var onSuccessAjax = function(transport) {
-                  sqls_container.empty();
                   issues_container.empty();
+                  sqls_container.empty();
                   loader.hide();
-                  table.show();
-                  
+                    
+                  if (transport.release_variants) {
+                      suggestions_container.empty();
+                      suggestions_container.show();
+                       $.each(transport.release_variants, function(index, release){
+                          var suggest_item = $("#release-suggestion").tmpl({data: release});
+                          suggest_item.appendTo(suggestions_container);
+                          suggest_item.click(function(){
+                              get_release(release.key);
+                          });
+                       });
+                  };
+
+
                   if (transport.sqls) {
                       $.each(transport.sqls['hh.ru'], function(index, sql){
                           $("#sql_template").tmpl({sql: sql}).appendTo(sqls_container);
@@ -84,6 +106,7 @@
                   };                   
                   
                   if (transport.issues) {
+                      table.show();
                       $.each(transport.issues, function(issue, data){
                           $("#issue_template").tmpl({name: issue, data: data}).appendTo(issues_container);
                       });
@@ -95,16 +118,21 @@
                   error.show();                  
               };
               
-              $('#release_submit').click(function(){
-                  loader.show();
-                  error.hide();
-                  table.hide();
+              var get_release = function(release){
+                  console.log('get_release: ' + release);
                   $.ajax({
                       url: '/ajax/get_release_info',
-                      data: {'release': release_number.val()},
+                      data: {'release': release},
                       success: onSuccessAjax,
                       error: errorAjax
-                  });
+                  });                  
+              };
+              
+              $('#release_submit').click(function(){
+                  error.hide();
+                  table.hide();
+                  loader.show();
+                  get_release(release_number.val());
               });
               
           });
