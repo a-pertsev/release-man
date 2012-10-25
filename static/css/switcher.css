@@ -1,0 +1,75 @@
+.g-switcher {
+    border-bottom: 1px dotted #076CC7;
+    text-decoration: none;
+    color: #076CC7;
+    cursor: pointer;
+}
+.m-switcher_strong {
+    font-weight: bold;
+}
+    .g-switcher:hover {
+        color: #c00;
+        border-bottom: 1px dotted #c00;
+    }
+    .m-switcher_noborder,
+    .m-switcher_noborder:hover {
+        border: none;
+    }
+    .g-switcher-green,
+    .m-switcher_green {
+        border-bottom-color: #6AAC00;
+        color: #6AAC00;
+    }
+    .g-switcher-red,
+    .m-switcher_red {
+        border-bottom-color: red;
+        color: red;
+    }
+    .g-switcher-666,
+    .m-switcher_666 {
+        border-bottom-color: #666;
+        color: #666;
+    }
+    .g-switcher-777,
+    .m-switcher_777 {
+        border-bottom-color: #777;
+        color: #777;
+    }
+    .g-switcher-999,
+    .m-switcher_999 {
+        border-bottom-color: #999;
+        color: #999;
+    }
+    .g-switcher-000,
+    .m-switcher_000 {
+        border-bottom-color: #000;
+        color: #000;
+    }
+    .g-switcher-F00,
+    .m-switcher_F00 {
+        border-bottom-color: #F00;
+        color: #F00;
+    }
+    .m-switcher_orange {
+        border-bottom-color: #ac910a;
+        color: #ac910a;
+    }
+    .m-switcher_fff {
+        border-bottom-color: #fff;
+        color: #fff;
+    }
+    .m-switcher_009CD5 {
+        border-bottom-color: #009CD5;
+        color: #009CD5;
+    }
+
+.g-switcher_input {
+    margin-left: 5px;
+    padding: 0px;
+    border: none; 
+    border-bottom: 1px dotted #999;
+    display:inline; 
+    font-size: inherit; 
+    background: none; 
+    vertical-align: inherit !important;
+}
