@@ -8,7 +8,7 @@
   </head>
 
   <body style="padding: 100px 10px 0 40px">
-      <input id="release_number" type="text"/>
+      <input id="release_number" type="text" name="release_name"/>
       <input id="release_submit" class="g-button m-button_orange" type="submit" value="Get release info"/>
       
       <div class="suggestions_container" style="display:none;">&nbsp;</div>
@@ -41,6 +41,10 @@
           <span class="g-switcher m-switcher_009CD5" style="margin-right:20px;">
               ${data.key} (${data.fields.summary})
           </span>
+      </script>
+
+      <script id="sql_template_header" type="text/x-jquery-tmpl">
+          </br><b>${repo}:</b></br>    
       </script>
 
       <script id="sql_template" type="text/x-jquery-tmpl">
@@ -100,8 +104,14 @@
 
 
                   if (transport.sqls) {
-                      $.each(transport.sqls['hh.ru'], function(index, sql){
-                          $("#sql_template").tmpl({sql: sql}).appendTo(sqls_container);
+                      $.each(transport.sqls, function(repo, values){
+                          if (values) {
+                              $("#sql_template_header").tmpl({repo: repo}).appendTo(sqls_container);
+                          
+                              $.each(values, function(index, sql){
+                                  $("#sql_template").tmpl({sql: sql}).appendTo(sqls_container);
+                              });
+                          }
                        });
                   };                   
                   

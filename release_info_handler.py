@@ -23,25 +23,25 @@ JIRA_RELEASE_SEARCH_DATA =  {'fields' : 'summary' ,
 GITHUB_API_HOST = 'https://api.github.com/'
 GITHUB_API_BRANCHES_LIST = GITHUB_API_HOST + 'repos/hhru/{0}/branches'
 GITHUB_API_BRANCH = GITHUB_API_HOST + '/repos/hh.ru/{0}/branches/{1}'
-GITHUB_API_HHRU_BRANCH_DIFF = GITHUB_API_HOST + 'repos/hhru/hh.ru/compare/master...{0}'
+GITHUB_API_BRANCH_DIFF = GITHUB_API_HOST + 'repos/hhru/{repo}/compare/master...{branch}'
 
 REPOS = {'hh.sites.main'    : 'xhh',
          'hh.ru'            : 'hh.ru',
          'hh.sites.common'  : 'hh-common',}
 
-
+SQL_REPOS = ['hh.ru', 'hh.sites.main']
 
 
 class ReleaseInfoHandler(ReleaseHandler):
-    def get_sql_from_branch(self, branch, async_group, context):
+    def get_sql_from_branch(self, repo, branch, async_group, context):
         def diff_cb(response):
             git_data = json.loads(response.body)
             for file_json in git_data.get('files', {}):
                 raw_url = file_json.get('raw_url', '')
                 if '.sql' in raw_url:
-                    context['sqls']['hh.ru'].append(raw_url)
+                    context['sqls'][repo].append(raw_url)
             
-        self.make_github_request(url=GITHUB_API_HHRU_BRANCH_DIFF.format(branch), cb=async_group.add(diff_cb))
+        self.make_github_request(url=GITHUB_API_BRANCH_DIFF.format(repo=repo, branch=branch), cb=async_group.add(diff_cb))
     
     def git_check_branches(self, release_branches, async_group, context):
         def branches_cb(context, repo, response):
@@ -52,8 +52,8 @@ class ReleaseInfoHandler(ReleaseHandler):
                     if release_branch in repo_branch:
                         context['issues'][release_branch]['git_branches'][REPOS.get(repo)].append(repo_branch)
                         
-                        if repo == 'hh.ru':
-                            self.get_sql_from_branch(repo_branch, async_group, context)
+                        if repo in SQL_REPOS:
+                            self.get_sql_from_branch(repo, repo_branch, async_group, context)
                         
 
         for release_branch in release_branches:
@@ -72,7 +72,7 @@ class ReleaseInfoHandler(ReleaseHandler):
             release_includes = release_data.get('fields').get('issuelinks', [])
             issue_numbers = map(lambda issue: issue.get('outwardIssue').get('key'), release_includes)
 
-            result_data = {'issues' : defaultdict(dict), 'sqls': {'hh.ru': []}}
+            result_data = {'issues' : defaultdict(dict), 'sqls': defaultdict(list)}
             
             def group_cb():
                 self.finish(result_data)
