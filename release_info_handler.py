@@ -110,7 +110,7 @@ class ReleaseInfoHandler(ReleaseHandler):
                 if suitable_issues:
                     self.finish({'release_variants': suitable_issues})
                 else:
-                    self.send_error('404', error_message='Cannot find release issue')
+                    self.send_error(status_code=404, error_message='Cannot find release issue')
                     
             self.make_jira_request(url=JIRA_API_SEARCH, data=JIRA_RELEASE_SEARCH_DATA, cb=search_cb)
 

@@ -2,9 +2,9 @@
   <head>
     <title>Test</title>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <link href="static/css/main.css" rel="stylesheet" type="text/css">
     <script src="static/js/jquery.js"></script>
     <script src="static/js/jquery-tmpl.js"></script>
-    <link href="static/css/main.css" rel="stylesheet" type="text/css">
   </head>
 
   <body style="padding: 100px 10px 0 40px">
@@ -129,6 +129,9 @@
               };
               
               var get_release = function(release){
+                  error.hide();
+                  table.hide();
+                  loader.show();
                   console.log('get_release: ' + release);
                   $.ajax({
                       url: '/ajax/get_release_info',
@@ -139,9 +142,6 @@
               };
               
               $('#release_submit').click(function(){
-                  error.hide();
-                  table.hide();
-                  loader.show();
                   get_release(release_number.val());
               });
               
