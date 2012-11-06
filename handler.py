@@ -3,15 +3,15 @@
 import pickle
 import base64
 
-from tornado import web, httpclient, curl_httpclient
+from tornado import web, httpclient
 from urllib import urlencode
 
+from http_client import HttpClient
 
-http_client = curl_httpclient.CurlAsyncHTTPClient(max_clients = 200, max_simultaneous_connections = 200)
 
 LOCAL_DUMP = False
 LOCAL_DIR = 'local_info/'
-LOCAL_WORK = False
+LOCAL_WORK = True
 
 
 def get_auth_header(user, password):
@@ -55,7 +55,7 @@ class ReleaseHandler(web.RequestHandler):
                     headers=headers,
                     connect_timeout=5,
                     request_timeout=10)
-        http_client.fetch(req, dumped_cb)
+        HttpClient.instance().fetch(req, dumped_cb)
         
         
     def make_jira_request(self, *args, **kwargs):
