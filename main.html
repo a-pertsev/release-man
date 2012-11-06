@@ -102,24 +102,30 @@
                        });
                   };
 
-
-                  if (transport.sqls) {
-                      $.each(transport.sqls, function(repo, values){
-                          if (values) {
-                              $("#sql_template_header").tmpl({repo: repo}).appendTo(sqls_container);
-                          
-                              $.each(values, function(index, sql){
-                                  $("#sql_template").tmpl({sql: sql}).appendTo(sqls_container);
-                              });
-                          }
-                       });
-                  };                   
+                  var release = transport.release;
                   
-                  if (transport.issues) {
-                      table.show();
-                      $.each(transport.issues, function(issue, data){
-                          $("#issue_template").tmpl({name: issue, data: data}).appendTo(issues_container);
-                      });
+                  if (release) {
+                      var issues = release.issues;
+                      var sqls = release.sqls;
+
+                      if (sqls) {
+                          $.each(sqls, function(repo, values){
+                              if (values) {
+                                  $("#sql_template_header").tmpl({repo: repo}).appendTo(sqls_container);
+                              
+                                  $.each(values, function(index, sql){
+                                      $("#sql_template").tmpl({sql: sql}).appendTo(sqls_container);
+                                  });
+                              }
+                           });
+                      };                   
+                      
+                      if (issues) {
+                          table.show();
+                          $.each(issues, function(issue, data){
+                              $("#issue_template").tmpl({name: issue, data: data}).appendTo(issues_container);
+                          });
+                      };
                   };
               };
               

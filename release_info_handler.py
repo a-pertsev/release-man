@@ -3,12 +3,15 @@
 import json
 import re
 
+from copy import deepcopy
 from collections import defaultdict
 from functools import partial
 from tornado import web
 
+import utils
 from async import AsyncGroup
 from handler import ReleaseHandler
+
 
 RELEASE_VERSION_RE = re.compile('((?:[0-9]+.)+[0-9]+)')
 RELEASE_ISSUE_PREFIX = 'EXP-'
@@ -32,54 +35,65 @@ REPOS = {'hh.sites.main'    : 'xhh',
 SQL_REPOS = ['hh.ru', 'hh.sites.main']
 
 
+class ReleaseInfo(object):
+    def __init__(self):
+        self.errors = {}
+        self.release = {'issues': defaultdict(dict), 'sqls': defaultdict(list)}
+        self.release_variants = []
+
+    def get_json(self):
+        result = deepcopy(self.__dict__)
+        return utils.clean(result)
+
+
 class ReleaseInfoHandler(ReleaseHandler):
-    def get_sql_from_branch(self, repo, branch, async_group, context):
+    def get_sql_from_branch(self, repo, branch, async_group):
         def diff_cb(response):
             git_data = json.loads(response.body)
             for file_json in git_data.get('files', {}):
                 raw_url = file_json.get('raw_url', '')
                 if '.sql' in raw_url:
-                    context['sqls'][repo].append(raw_url)
+                    self.result.release['sqls'][repo].append(raw_url)
             
         self.make_github_request(url=GITHUB_API_BRANCH_DIFF.format(repo=repo, branch=branch), cb=async_group.add(diff_cb))
     
-    def git_check_branches(self, release_branches, async_group, context):
-        def branches_cb(context, repo, response):
+    def git_check_branches(self, release_branches, async_group):
+        def branches_cb(repo, response):
             git_data = json.loads(response.body)
             repo_branches = map(lambda tree: tree.get('name', ''), git_data)
             for repo_branch in repo_branches:
                 for release_branch in release_branches:
                     if release_branch in repo_branch:
-                        context['issues'][release_branch]['git_branches'][REPOS.get(repo)].append(repo_branch)
+                        self.result.release['issues'][release_branch]['git_branches'][REPOS.get(repo)].append(repo_branch)
                         
                         if repo in SQL_REPOS:
-                            self.get_sql_from_branch(repo, repo_branch, async_group, context)
+                            self.get_sql_from_branch(repo, repo_branch, async_group)
                         
 
         for release_branch in release_branches:
-            context['issues'][release_branch]['git_branches'] = defaultdict(list)
+            self.result.release['issues'][release_branch]['git_branches'] = defaultdict(list)
 
         for repo in REPOS:
             url = GITHUB_API_BRANCHES_LIST.format(repo)
-            self.make_github_request(url=url, cb=async_group.add(partial(branches_cb, context, repo)))
+            self.make_github_request(url=url, cb=async_group.add(partial(branches_cb, repo)))
     
 
 
     @web.asynchronous
     def get(self):
+        self.result = ReleaseInfo()
+        
         def release_cb(response):
             release_data = json.loads(response.body)
             release_includes = release_data.get('fields').get('issuelinks', [])
             issue_numbers = map(lambda issue: issue.get('outwardIssue').get('key'), release_includes)
 
-            result_data = {'issues' : defaultdict(dict), 'sqls': defaultdict(list)}
-            
             def group_cb():
-                self.finish(result_data)
+                self.finish()
             
             def issue_cb(issue, response):
                 issue_data = json.loads(response.body)
-                result_data['issues'][issue].update({'summary': issue_data.get('fields').get('summary'), 
+                self.result.release['issues'][issue].update({'summary': issue_data.get('fields').get('summary'), 
                                            'packages': issue_data.get('fields').get('customfield_11010')})
             
             if not issue_numbers:
@@ -92,7 +106,7 @@ class ReleaseInfoHandler(ReleaseHandler):
                 url = JIRA_API_ISSUE.format(issue)
                 self.make_jira_request(url=url, cb=async_group.add(partial(issue_cb, issue)))        
 
-            self.git_check_branches(release_branches=issue_numbers, async_group=async_group, context=result_data)
+            self.git_check_branches(release_branches=issue_numbers, async_group=async_group)
             async_group.dec() # for local usage
 
 
@@ -132,4 +146,12 @@ class ReleaseInfoHandler(ReleaseHandler):
 
         self.make_jira_request(url=JIRA_API_ISSUE.format(release_task), cb=release_cb)
 
+
+    def finish(self, chunk=None):
+        if chunk is not None:
+            result = chunk
+        else:
+            result = self.result.get_json()
+        super(ReleaseInfoHandler, self).finish(result)
+        
         
