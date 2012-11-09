@@ -13,7 +13,7 @@ def clean(data):
         marked = []
         for key, value in data.iteritems():
             data[key] = clean(value)
-            if clean_filter(data[key]):
+            if not clean_filter(data[key]):
                 marked.append(key)
         for key in marked:
             del(data[key])

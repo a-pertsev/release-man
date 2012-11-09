@@ -2,6 +2,7 @@
 
 import pickle
 import base64
+import logging
 
 from tornado import web, httpclient
 from urllib import urlencode
@@ -11,7 +12,9 @@ from http_client import HttpClient
 
 LOCAL_DUMP = False
 LOCAL_DIR = 'local_info/'
-LOCAL_WORK = True
+LOCAL_WORK = False
+
+logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 
 
 def get_auth_header(user, password):
@@ -35,6 +38,7 @@ class ReleaseHandler(web.RequestHandler):
         file_name = base64.b64encode(url)
         
         if LOCAL_WORK:
+            logging.info('Local request: {0}'.format(url))
             with open(LOCAL_DIR + file_name, 'r') as f:
                 cb(ResponseStub(pickle.loads(f.read())))
             return
@@ -55,6 +59,8 @@ class ReleaseHandler(web.RequestHandler):
                     headers=headers,
                     connect_timeout=5,
                     request_timeout=10)
+        
+        logging.info('External request: {0}'.format(url))
         HttpClient.instance().fetch(req, dumped_cb)
         
         
