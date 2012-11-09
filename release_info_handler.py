@@ -2,6 +2,8 @@
 
 import json
 import re
+import logging
+
 
 from copy import deepcopy
 from collections import defaultdict
@@ -11,6 +13,8 @@ from tornado import web
 import utils
 from async import AsyncGroup
 from handler import ReleaseHandler
+
+logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 
 
 RELEASE_VERSION_RE = re.compile('((?:[0-9]+.)+[0-9]+)')
@@ -85,6 +89,11 @@ class ReleaseInfoHandler(ReleaseHandler):
         
         def release_cb(response):
             release_data = json.loads(response.body)
+            if release_data.get('errorMessages') is not None:
+                logging.error('issue getting error: {0}: {1}'.format(release_task, release_data.get('errorMessages')))
+                self.finish({'errorMessage': '{0}: Issue does not exits'.format(release_task)}, result_code=404)
+                return
+            
             release_includes = release_data.get('fields').get('issuelinks', [])
             issue_numbers = map(lambda issue: issue.get('outwardIssue').get('key'), release_includes)
 
@@ -143,15 +152,16 @@ class ReleaseInfoHandler(ReleaseHandler):
                     return
                 else:
                     self.send_error(status_code=400, error_message='Bad release issue name')
-
         self.make_jira_request(url=JIRA_API_ISSUE.format(release_task), cb=release_cb)
 
 
-    def finish(self, chunk=None):
+    def finish(self, chunk=None, result_code=None):
         if chunk is not None:
             result = chunk
         else:
             result = self.result.get_json()
+        if result_code is not None:
+            self.set_status(result_code)
         super(ReleaseInfoHandler, self).finish(result)
         
         

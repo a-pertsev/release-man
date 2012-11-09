@@ -5,6 +5,8 @@
 .pydevproject
 .settings
 
-release.log
+*.log
+*.pid
+
 tornado
 local_info
