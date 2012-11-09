@@ -68,5 +68,5 @@ class ReleaseHandler(web.RequestHandler):
         return self.make_request(*args, headers=get_auth_header('jira_login', 'jira_password'), **kwargs)
 
     def make_github_request(self, *args, **kwargs):
-        return self.make_request(*args, headers=get_auth_header('jira_login', 'github_password'), **kwargs)
+        return self.make_request(*args, headers=get_auth_header('github_login', 'github_password'), **kwargs)
     
