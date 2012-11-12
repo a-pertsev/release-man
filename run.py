@@ -17,15 +17,8 @@ PIDFILE = 'release.pid'
 
 logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.DEBUG)
 
-       
-def start_server():
-    logging.info('Server starting at: {0}'.format(datetime.now()))
 
-    try:
-        pidlockfile.write_pid_to_pidfile(PIDFILE)
-    except OSError:
-        logging.error('Pid file already exist, process must be running')
-        sys.exit()
+def init_application():
     
     routes = [
         (r"/()", web.StaticFileHandler, {"path": "main.html"}),
@@ -54,10 +47,39 @@ def start_server():
 
     logging.info('Server started')
     
-    ioloop.IOLoop.instance().start()
+    ioloop.IOLoop.instance().start()    
+       
+       
+def start_server():
+    logging.info('Server starting at: {0}'.format(datetime.now()))
+
+    pid = None
+    try:
+        pid = pidlockfile.read_pid_from_pidfile(PIDFILE)
+    except OSError:
+        pass
+    
+    if pid is not None:
+        try:
+            os.getpgid(pid)
+        except OSError:
+            pidlockfile.remove_existing_pidfile(PIDFILE)
+        else:
+            init_application()
+            return
+
+    try:
+        pidlockfile.write_pid_to_pidfile(PIDFILE)
+    except OSError:
+        logging.error('Pid file already exist, process must be running')
+        sys.exit()
+    
+    init_application()
 
     
 def stop_server():
+    logging.info('Stopping server')
+
     pid = pidlockfile.read_pid_from_pidfile(PIDFILE)
     try:
         os.kill(pid, signal.SIGTERM)
@@ -70,7 +92,7 @@ def stop_server():
 
 
 def start_as_daemon():
-    log = open('release.log', 'a+')
+    log = open('release.log', 'w+')
     ctx = daemon.DaemonContext(working_directory='.',
                                stderr=log,
                                stdout=log)
