@@ -3,18 +3,25 @@
 import pickle
 import base64
 import logging
+import sys
 
 from tornado import web, httpclient
 from urllib import urlencode
 
 from http_client import HttpClient
 
-
 LOCAL_DUMP = False
 LOCAL_DIR = 'local_info/'
-LOCAL_WORK = False
+LOCAL_WORK = True
 
-logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
+logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.DEBUG)
+
+
+try:
+    from passwords import passwords
+except ImportError:
+    logging.error('Passwords must be declared in passwords.py module')
+    sys.exit()
 
 
 def get_auth_header(user, password):
@@ -65,8 +72,8 @@ class ReleaseHandler(web.RequestHandler):
         
         
     def make_jira_request(self, *args, **kwargs):
-        return self.make_request(*args, headers=get_auth_header('jira_login', 'jira_password'), **kwargs)
+        return self.make_request(*args, headers=get_auth_header(*passwords.get('jira')), **kwargs)
 
     def make_github_request(self, *args, **kwargs):
-        return self.make_request(*args, headers=get_auth_header('github_login', 'github_password'), **kwargs)
+        return self.make_request(*args, headers=get_auth_header(*passwords.get('github')), **kwargs)
     
