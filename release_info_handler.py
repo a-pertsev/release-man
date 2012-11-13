@@ -11,7 +11,6 @@ from functools import partial
 from tornado import web
 
 import utils
-from async import AsyncGroup
 from handler import ReleaseHandler
 
 logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
@@ -108,7 +107,7 @@ class ReleaseInfoHandler(ReleaseHandler):
             if not issue_numbers:
                 group_cb()
     
-            async_group = AsyncGroup(group_cb)
+            async_group = utils.AsyncGroup(group_cb)
             async_group.add_notification() #for local usage
             
             for issue in issue_numbers:
